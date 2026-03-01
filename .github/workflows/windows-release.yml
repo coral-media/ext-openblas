@@ -61,9 +61,14 @@ jobs:
           # /I "..\deps\include" and link path resolve to the OpenBLAS files.
           $deps = "${{ github.workspace }}\build\deps"
           New-Item -ItemType Directory -Force "$deps\include", "$deps\lib", "$deps\bin" | Out-Null
-          Copy-Item "$root\include\*" "$deps\include" -Recurse -Force
-          Copy-Item "$root\lib\*.lib" "$deps\lib"     -Force
-          Copy-Item "$root\bin\*.dll" "$deps\bin"     -Force
+          Copy-Item "$root\include\*"          "$deps\include" -Recurse -Force
+          # vcpkg may install cblas.h under include\openblas\ rather than include\.
+          # Flatten that subdirectory so #include <cblas.h> is found via /I "..\deps\include".
+          if (Test-Path "$root\include\openblas") {
+            Copy-Item "$root\include\openblas\*" "$deps\include" -Force
+          }
+          Copy-Item "$root\lib\*.lib" "$deps\lib" -Force
+          Copy-Item "$root\bin\*.dll" "$deps\bin" -Force
 
       - name: build extension
         uses: php/php-windows-builder/extension@v1

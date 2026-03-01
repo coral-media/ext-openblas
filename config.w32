@@ -12,6 +12,11 @@ if (PHP_OPENBLAS != "no") {
   var openblas_root = WshShell.ExpandEnvironmentStrings("%OPENBLAS_ROOT%");
   if (openblas_root != "%OPENBLAS_ROOT%" && FSO.FolderExists(openblas_root + "\\include")) {
     CFLAGS_OPENBLAS += " /I\"" + openblas_root + "\\include\"";
+    // vcpkg may install cblas.h under include\openblas\ depending on the port version.
+    // Add that subdirectory too so #include <cblas.h> resolves in either layout.
+    if (FSO.FolderExists(openblas_root + "\\include\\openblas")) {
+      CFLAGS_OPENBLAS += " /I\"" + openblas_root + "\\include\\openblas\"";
+    }
     ADD_FLAG("LDFLAGS", "/LIBPATH:\"" + openblas_root + "\\lib\"");
   }
   ADD_FLAG("LIBS", "openblas.lib");
