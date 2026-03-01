@@ -33,6 +33,7 @@ jobs:
       - name: setup vcpkg
         shell: pwsh
         run: |
+          if (Test-Path Env:VCPKG_ROOT) { Remove-Item Env:VCPKG_ROOT }
           git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}\vcpkg"
           & "${{ github.workspace }}\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -46,6 +47,7 @@ jobs:
       - name: install openblas
         shell: pwsh
         run: |
+          if (Test-Path Env:VCPKG_ROOT) { Remove-Item Env:VCPKG_ROOT }
           $vcpkg = "${{ github.workspace }}\vcpkg\vcpkg.exe"
           & $vcpkg install openblas:$env:VCPKG_TRIPLET
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
