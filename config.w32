@@ -5,14 +5,16 @@ if (PHP_OPENBLAS != "no") {
   CFLAGS_OPENBLAS = CFLAGS_OPENBLAS + " /DHAVE_OPENBLAS";
   CFLAGS_OPENBLAS = CFLAGS_OPENBLAS + " /DOPENBLAS_USE_SYSTEM";
 
-  // Pick up OpenBLAS installed via vcpkg (OPENBLAS_ROOT survives vcvarsall.bat
-  // unlike INCLUDE/LIB which are reset by the Visual Studio environment setup).
+  // ADD_FLAG("CFLAGS", ...) only affects PHP core compilation, not extensions.
+  // Include paths for extensions must go into CFLAGS_OPENBLAS (the 4th arg to
+  // EXTENSION()) so they appear in cl.exe's command line.
+  // OPENBLAS_ROOT is set by the CI workflow via vcpkg and survives vcvarsall.bat.
   var openblas_root = WshShell.ExpandEnvironmentStrings("%OPENBLAS_ROOT%");
   if (openblas_root != "%OPENBLAS_ROOT%" && FSO.FolderExists(openblas_root + "\\include")) {
-    ADD_FLAG("CFLAGS", "/I\"" + openblas_root + "\\include\"");
+    CFLAGS_OPENBLAS += " /I\"" + openblas_root + "\\include\"";
     ADD_FLAG("LDFLAGS", "/LIBPATH:\"" + openblas_root + "\\lib\"");
-    ADD_FLAG("LIBS", "openblas.lib");
   }
+  ADD_FLAG("LIBS", "openblas.lib");
 
   EXTENSION("openblas", "openblas.c", null, CFLAGS_OPENBLAS);
 }

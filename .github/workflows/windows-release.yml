@@ -57,6 +57,20 @@ jobs:
           "OPENBLAS_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PATH=$root\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: stage openblas into builder deps
+        shell: pwsh
+        run: |
+          # The php-windows-builder passes /I "..\deps\include" and links from
+          # "..\deps\lib" relative to its hash build subdirectory, so pre-populating
+          # build\deps\ guarantees cblas.h and openblas.lib are found even if
+          # OPENBLAS_ROOT does not propagate into configure.js at build time.
+          $src  = "$env:VCPKG_ROOT\installed\$env:VCPKG_TRIPLET"
+          $deps = "${{ github.workspace }}\build\deps"
+          New-Item -ItemType Directory -Force "$deps\include", "$deps\lib", "$deps\bin" | Out-Null
+          Copy-Item "$src\include\*"   "$deps\include" -Recurse -Force
+          Copy-Item "$src\lib\*.lib"   "$deps\lib"     -Force
+          Copy-Item "$src\bin\*.dll"   "$deps\bin"     -Force
+
       - name: build extension
         uses: php/php-windows-builder/extension@v1
         with:
