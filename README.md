@@ -45,24 +45,24 @@ make test
 ### Core
 Extension metadata and runtime info.
 
-`openblas_version`, `openblas_get_config`
+[`openblas_version`](docs/api/functions/openblas_version.md), [`openblas_get_config`](docs/api/functions/openblas_get_config.md)
 
 ### Dot Products
 Vector dot products in fixed and precision-dispatched variants.
 
-`openblas_sdot`, `openblas_ddot`, `openblas_dot`
+[`openblas_sdot`](docs/api/functions/openblas_sdot.md), [`openblas_ddot`](docs/api/functions/openblas_ddot.md), [`openblas_dot`](docs/api/functions/openblas_dot.md)
 
 ### Euclidean Norms (L2)
 Vector 2-norm functions in fixed and precision-dispatched variants.
 
-`openblas_snrm2`, `openblas_dnrm2`, `openblas_nrm2`
+[`openblas_snrm2`](docs/api/functions/openblas_snrm2.md), [`openblas_dnrm2`](docs/api/functions/openblas_dnrm2.md), [`openblas_nrm2`](docs/api/functions/openblas_nrm2.md)
 
 ### One Norms (L1)
 Vector 1-norm (sum of absolute values) functions in fixed and precision-dispatched variants.
 
-`openblas_sasum`, `openblas_dasum`, `openblas_asum`
+[`openblas_sasum`](docs/api/functions/openblas_sasum.md), [`openblas_dasum`](docs/api/functions/openblas_dasum.md), [`openblas_asum`](docs/api/functions/openblas_asum.md)
 
 ### Infinity Norm Helpers (i_amax)
 Index of maximum absolute value in fixed and precision-dispatched variants.
 
-`openblas_isamax`, `openblas_idamax`, `openblas_iamax`
+[`openblas_isamax`](docs/api/functions/openblas_isamax.md), [`openblas_idamax`](docs/api/functions/openblas_idamax.md), [`openblas_iamax`](docs/api/functions/openblas_iamax.md)
