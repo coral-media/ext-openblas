@@ -31,22 +31,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          runVcpkgInstall: false
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}\vcpkg"
+          & "${{ github.workspace }}\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: select vcpkg triplet
+        shell: pwsh
+        run: |
+          $triplet = if ("${{ matrix.arch }}" -eq "x86") { "x86-windows" } else { "x64-windows" }
+          "VCPKG_TRIPLET=$triplet" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: install openblas
         shell: pwsh
         run: |
           $vcpkg = "${{ github.workspace }}\vcpkg\vcpkg.exe"
-          & $vcpkg install openblas:x64-windows
+          & $vcpkg install openblas:$env:VCPKG_TRIPLET
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: export openblas paths
         shell: pwsh
         run: |
-          $root = "${{ github.workspace }}\vcpkg\installed\x64-windows"
+          $root = "${{ github.workspace }}\vcpkg\installed\$env:VCPKG_TRIPLET"
           "OPENBLAS_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "INCLUDE=$root\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "LIB=$root\lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
