@@ -1,0 +1,31 @@
+{
+  "name": "coral-media/ext-openblas",
+  "description": "OpenBLAS bindings for PHP",
+  "type": "php-ext",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1"
+  },
+  "keywords": [
+    "php-ext",
+    "openblas",
+    "blas",
+    "linear-algebra"
+  ],
+  "authors": [
+    {
+      "name": "Rafael Ernesto Espinosa Santiesteban",
+      "email": "rernesto.espinosa@gmail.com"
+    }
+  ],
+  "php-ext": {
+    "extension-name": "openblas",
+    "configure-options": [
+      {
+        "name": "with-openblas",
+        "description": "Enable OpenBLAS support (default uses system OpenBLAS)",
+        "needs-value": false
+      }
+    ]
+  }
+}

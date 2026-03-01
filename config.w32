@@ -1,0 +1,8 @@
+ARG_WITH("openblas", "OpenBLAS support", "yes");
+
+if (PHP_OPENBLAS != "no") {
+  var CFLAGS_OPENBLAS = "";
+  CFLAGS_OPENBLAS = CFLAGS_OPENBLAS + " /DHAVE_OPENBLAS";
+  CFLAGS_OPENBLAS = CFLAGS_OPENBLAS + " /DOPENBLAS_USE_SYSTEM";
+  EXTENSION("openblas", "openblas.c", null, CFLAGS_OPENBLAS);
+}
