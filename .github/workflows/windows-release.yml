@@ -30,46 +30,40 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: setup vcpkg
-        shell: pwsh
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}\vcpkg"
-          & "${{ github.workspace }}\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: select vcpkg triplet
         shell: pwsh
         run: |
           $triplet = if ("${{ matrix.arch }}" -eq "x86") { "x86-windows" } else { "x64-windows" }
           "VCPKG_TRIPLET=$triplet" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      # Cache the vcpkg installed packages so OpenBLAS is only built from source once.
+      # VCPKG_INSTALLATION_ROOT is the pre-installed vcpkg on GitHub Windows runners;
+      # it already has cmake/ninja in its downloads dir, avoiding transient download failures.
+      - name: cache vcpkg openblas
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          key: vcpkg-openblas-${{ matrix.arch }}-0.3.29-v1
+
       - name: install openblas
         shell: pwsh
         run: |
-          & "$env:VCPKG_ROOT\vcpkg.exe" install openblas:$env:VCPKG_TRIPLET
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install openblas:$env:VCPKG_TRIPLET
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: export openblas paths
+      - name: export openblas paths and stage deps
         shell: pwsh
         run: |
-          $root = "$env:VCPKG_ROOT\installed\$env:VCPKG_TRIPLET"
+          $root = "$env:VCPKG_INSTALLATION_ROOT\installed\$env:VCPKG_TRIPLET"
           "OPENBLAS_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PATH=$root\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: stage openblas into builder deps
-        shell: pwsh
-        run: |
-          # The php-windows-builder passes /I "..\deps\include" and links from
-          # "..\deps\lib" relative to its hash build subdirectory, so pre-populating
-          # build\deps\ guarantees cblas.h and openblas.lib are found even if
-          # OPENBLAS_ROOT does not propagate into configure.js at build time.
-          $src  = "$env:VCPKG_ROOT\installed\$env:VCPKG_TRIPLET"
+          # Pre-populate build\deps\ so the php-windows-builder's hardcoded
+          # /I "..\deps\include" and link path resolve to the OpenBLAS files.
           $deps = "${{ github.workspace }}\build\deps"
           New-Item -ItemType Directory -Force "$deps\include", "$deps\lib", "$deps\bin" | Out-Null
-          Copy-Item "$src\include\*"   "$deps\include" -Recurse -Force
-          Copy-Item "$src\lib\*.lib"   "$deps\lib"     -Force
-          Copy-Item "$src\bin\*.dll"   "$deps\bin"     -Force
+          Copy-Item "$root\include\*" "$deps\include" -Recurse -Force
+          Copy-Item "$root\lib\*.lib" "$deps\lib"     -Force
+          Copy-Item "$root\bin\*.dll" "$deps\bin"     -Force
 
       - name: build extension
         uses: php/php-windows-builder/extension@v1
