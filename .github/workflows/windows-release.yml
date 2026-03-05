@@ -36,25 +36,34 @@ jobs:
           $triplet = if ("${{ matrix.arch }}" -eq "x86") { "x86-windows" } else { "x64-windows" }
           "VCPKG_TRIPLET=$triplet" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: resolve vcpkg root
+        id: vcpkg-root
+        shell: pwsh
+        run: |
+          $root = $env:VCPKG_INSTALLATION_ROOT
+          if (-not $root) { $root = "C:\vcpkg" }
+          "root=$root" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       # Cache the vcpkg installed packages so OpenBLAS is only built from source once.
       # VCPKG_INSTALLATION_ROOT is the pre-installed vcpkg on GitHub Windows runners;
       # it already has cmake/ninja in its downloads dir, avoiding transient download failures.
       - name: cache vcpkg openblas
         uses: actions/cache@v4
         with:
-          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          path: ${{ steps.vcpkg-root.outputs.root }}\installed
           key: vcpkg-openblas-${{ matrix.arch }}-0.3.29-v1
 
       - name: install openblas
         shell: pwsh
         run: |
-          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install openblas:$env:VCPKG_TRIPLET
+          $root = "${{ steps.vcpkg-root.outputs.root }}"
+          & "$root\vcpkg.exe" install openblas:$env:VCPKG_TRIPLET
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: export openblas paths and stage deps
         shell: pwsh
         run: |
-          $root = "$env:VCPKG_INSTALLATION_ROOT\installed\$env:VCPKG_TRIPLET"
+          $root = "${{ steps.vcpkg-root.outputs.root }}\installed\$env:VCPKG_TRIPLET"
           "OPENBLAS_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PATH=$root\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           # Pre-populate build\deps\ so the php-windows-builder's hardcoded
